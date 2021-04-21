@@ -3,43 +3,57 @@ const prompt = require('prompt');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
-var parseString = require('xml2js').parseString;
+const xml2js = require('xml2js');
 
-// prompt.start();
-// prompt.get(['calloutnumber', 'whattosay'], function (err, result) {
-//     if (err) { return onErr(err); }
+prompt.start();
+prompt.get(['calloutnumber', 'whattosay'], function (err, result) {
+    if (err) { return onErr(err); }
     // we have to convert the whattosay into xml and write it insite de <Say> tags
-    var xml = '<Response><Say voice="woman" language="fr-FR">Chapeau!</Say><Say>You are the bestest</Say></Response>'
-    var xml2 = 'Chapeau!'
-    var xml3injson = { Response: { Say: [ { voice: 'woman', language: 'fr-FR' }, 'You are the bestest' ] } } 
-    const target = { Say: xml2};
-    const specs = { Say: xml2, '_': { voice: 'woman', language: 'fr-FR' } };
-    // const returnedTarget = Object.assign(target, source);
-    // console.log(target);
-    // console.log(returnedTarget);
-    parseString(xml, function (err, result) {
-        console.log(result);
-        console.log(result.Response.Say);
-        // console.log(result.Response.Say[0]);
-        // console.log(result.Response.Say[1]);
-        newmessage = Object.assign(result.Response, specs);
-        console.log(newmessage);
-        // newmessage2 = Object.assign(result.Response, target, specs);
-        // console.log(newmessage2);
+    const fs = require("fs");
+    const whattosay2 = result.whattosay
+
+    // read XML file
+    fs.readFile("test.xml", "utf-8", (err, data) => {
+        if (err) {
+            throw err;
+        }
+         // convert XML data to JSON object
+    xml2js.parseString(data, (err, result) => {
+        if (err) {
+            throw err;
+        }
+        // edit the say tag
+        result.Response.Say[2] = whattosay2;
+        newcallmessage = JSON.stringify(result, null, 4);
+        // console.log(newcallmessage);
+        // convert SJON objec to XML
+        const builder = new xml2js.Builder();
+        const xml = builder.buildObject(result);
+        // write updated XML string to a file
+        fs.writeFile('test2.xml', xml, (err) => {
+           if (err) {
+               throw err;
+           }
+   
+           console.log(`Updated XML is written to a new file.`);
+       });
     });
 
-    // good job!
+});
+
     // console.log('Calling ' + result.calloutnumber + '...' + 'we are going to tell that B: ' + result.whattosay);
-    // client.calls
-    //   .create({
-    //     twiml: result.whattosay,
-    //     // twiml: '<Response><Say>Ahoy, Mikinos!</Say></Response>',
-    //     //  url: WEBSITE + '/test.xml',
-    //      to: ('+1' + result.calloutnumber),
-    //      from: PHONENUMBER
-    //    })
-    //   .then(call => console.log(call.sid));
-// });
+    client.calls
+      .create({
+          // need to figure out a way to have it read any xml file i give it.
+          // to be continued.
+        twiml: 'test.xml',
+        // twiml: '<Response><Say>Ahoy, Mikinos!</Say></Response>',
+        //  url: process.env.WEBSITE + '/test2.xml',
+         to: ('+1' + result.calloutnumber),
+         from: process.env.PHONENUMBER
+       })
+      .then(call => console.log(call.sid));
+});
 
 // function onErr(err) {
 //     console.log(err);
