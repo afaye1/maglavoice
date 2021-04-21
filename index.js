@@ -4,6 +4,15 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
 const xml2js = require('xml2js');
+const express = require('express');
+
+const app = express();
+app.listen(5000, () => {
+    console.log(
+      'Now listening on port 3000. ' +
+      'Be sure to restart when you make code changes!'
+    );
+  });
 
 prompt.start();
 prompt.get(['calloutnumber', 'whattosay'], function (err, result) {
@@ -46,9 +55,11 @@ prompt.get(['calloutnumber', 'whattosay'], function (err, result) {
       .create({
           // need to figure out a way to have it read any xml file i give it.
           // to be continued.
-        twiml: 'test.xml',
+        // twiml: 'test.xml',
         // twiml: '<Response><Say>Ahoy, Mikinos!</Say></Response>',
         //  url: process.env.WEBSITE + '/test2.xml',
+        // for some reason the url is broken when i use ngrok or local file path...something must be wrong.
+         url: process.env.WEBSITE,
          to: ('+1' + result.calloutnumber),
          from: process.env.PHONENUMBER
        })
